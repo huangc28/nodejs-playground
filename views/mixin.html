@@ -1,0 +1,158 @@
+<style media="screen">
+    #myToolBar{
+      background-color: grey;
+      overflow:hidden;
+      text-align: center;
+    }
+
+    #myToolBar > .toolbar-item{
+      width: 30px;
+      height: 30px;
+      display: inline-block;
+      margin:10px 10px 0 0;
+      padding:5px 10px
+    }
+
+    .disabled{
+      background-color:red;
+    }
+
+    .active{
+      background-color:green;
+    }
+</style>
+
+<html>
+  <head>
+    <title> Mixin Design pattern </title>
+  </head>
+  <body>
+    <h1> Mixin Exmpale </h1>
+
+    <div id='myToolBar' class="toolbar">
+      <span class="toolbar-item disabled"> d1 </span>
+      <span class="toolbar-item disabled"> d2 </span>
+      <span class="toolbar-item disabled"> d3 </span>
+    </div>
+    <br/>
+    <a id="itemStateToggle" href="#"> Toggle Active State of Item 1 </a>
+  </body>
+<html>
+
+<script type="text/javascript">
+
+/**
+ * Initialize toolbar DOM element.
+ *  1. Retrieve all toolbar-item element from an array.
+ *    toolbar.items[0].toggleActiveState()
+ *
+ * var toolbar = new ToolBar("myToolBar");
+ *
+ * @param DomElement
+ */
+function ToolBarItem(itemElement){
+  this.__el = itemElement;
+  // this.active = false;
+  itemElement = this.__el.addEventListener('click', this.toggleActiveState.bind(this));
+}
+
+Object.defineProperties(ToolBarItem.prototype, {
+  enabled: {
+    // get the result of enable status
+    // if element class contains "disable", then the dom
+    get: function(){
+      return !this.__el.classList.contains('disabled');
+    },
+    set: function(value){
+      if(value){
+        this.__el.classList.remove('disabled');
+      }else{
+        this.__el.classList.add('disabled');
+      }
+    }
+  },
+  activated:{
+    get: function(){
+      return this.__el.classList.contains('acitve');
+    },
+    set: function(value){
+    
+      // console.log(value);
+      if(value){
+        this.__el.classList.add('active');
+      }else{
+        this.__el.classList.remove('active');
+      }
+    }
+  }
+});
+
+/**
+ * Toggle active state.
+ */
+ToolBarItem.prototype.toggleActiveState = function(){
+
+  // Determine dom element state by its "class".
+  this.enabled = !this.enabled
+
+  this.activated = this.enabled;
+};
+
+/**
+ * Take in an toolbar DOM element and fetch its
+ *
+ * @param DOMObject toolbar
+ */
+function ToolBar(toolBar){
+
+  var items = [];
+  return createToolBarItems(toolBar.childNodes);
+
+  /**
+   * Only accept element with class "toolbar"
+   *
+   * @param DOMObject toolbar
+   * @return array toolBar
+   */
+  function createToolBarItems(itemElements){
+    var item = [];
+    [].forEach.call(itemElements, function(ele, index, array){
+      // start creating ToolBar Items
+      if(typeof ele.classList != 'undefined' && ele.classList.contains('toolbar-item')){
+        item.push(new ToolBarItem(ele));
+      }
+    });
+  
+    return { items: item }
+  };
+}
+
+var toolbar = new ToolBar(document.getElementById("myToolBar"));
+var toggle = document.getElementById("itemStateToggle");
+
+mixin(toggle, toolbar.items[0], 'toggleActiveState')
+
+toggle.addEventListener('click', function(e){
+
+  // console.log(e.target);
+  e.target.toggleActiveState();
+  e.preventDefault();
+});
+
+
+
+/**
+ * Bind specified DOM element with "toggleActiveState" method.
+ *
+ * @param string toggleActiveState 
+ * @param Object source
+ * @param Object target
+ */
+function mixin(target, source, methods){
+  // console.log('method');
+  for(var ii=2, ol=arguments.length; ii<ol; ii++){
+    var method = arguments[ii];
+    target[method] = source[method].bind(source);
+  }
+}
+</script>
